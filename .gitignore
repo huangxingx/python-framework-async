@@ -1,0 +1,6 @@
+.idea/*
+
+*.pyc
+*.log
+webar/config/*.ini
+media/*
