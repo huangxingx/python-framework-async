@@ -75,7 +75,7 @@ class RenderHandlerMixin(object):
             ret_data['data'] = data
         elif isinstance(data, list):
             ret_data['data']['data_list'] = data
-        elif isinstance(data, str):
+        elif isinstance(data, (str, int)):
             ret_data['data']['data_value'] = data
         else:
             raise TypeError('render obj type error, obj: %s' % data)
@@ -153,18 +153,6 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin, ServiceMixin):
         self.page = 0
         self.page_size = 0
 
-    def parse_json_body(self):
-        content_type = self.request.headers.get('Content-Type', '')
-        try:
-            if content_type.startswith('application/json') and self.request.method in ['PUT', 'POST']:
-                self.request.json = json.loads(self.request.body.decode('utf-8')) if self.request.body else {}
-                if not isinstance(self.request.json, dict):
-                    self.render_error(u'request.body can not be json object', status_code=http.HTTPStatus.BAD_REQUEST)
-                    return
-        except Exception as e:
-            self.render_error(str(e))
-            return
-
     def prepare(self):
         """ 处理 application/json 格式数据， 解析到 self.request.body 中 """
 
@@ -172,7 +160,7 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin, ServiceMixin):
         try:
             if content_type.startswith('application/json') and self.request.method in ['PUT', 'POST']:
                 self.request.json = json.loads(self.request.body.decode('utf-8')) if self.request.body else {}
-                if not isinstance(self.request.json, dict):
+                if not isinstance(self.request.json, (dict, list)):
                     self.render_error(u'request.body can not be json object', status_code=http.HTTPStatus.BAD_REQUEST)
                     return
         except Exception as e:

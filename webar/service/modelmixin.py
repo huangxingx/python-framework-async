@@ -3,7 +3,7 @@
 
 # @author: x.huang
 # @date:08/05/18
-from model.test_model import TestModel
+from model.test.test_model import TestModel
 
 
 class ModelMixin(object):

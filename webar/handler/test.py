@@ -23,5 +23,27 @@ class RedisTestHandler(BaseRequestHandler):
 class MongoTestHandler(BaseRequestHandler):
 
     async def _get(self, *args, **kwargs):
-        r = await self.s_test.find_one()
+        r = await self.s_test.get_list(length=1)
+        self.render_success(r)
+
+    async def _post(self, *args, **kwargs):
+
+        insert_data = self.request.json
+        if isinstance(insert_data, list):
+            r = await self.s_test.m_test.insert_many(insert_data)
+        else:
+            r = await self.s_test.insert_one(insert_data)
+        self.render_success(r)
+
+    async def _delete(self, *args, **kwargs):
+        is_many = self.get_argument('is_many', False)
+        delete_spec = {"post": "test"}
+
+        delete_count = await self.s_test.m_test.delete(delete_spec, is_many)
+        self.render_success(delete_count)
+
+    async def _put(self, *args, **kwargs):
+        update_date = self.request.json
+        spec_data = {"post1" : "test1"}
+        r = await self.s_test.m_test.update(spec_data, update_date, multi=False)
         self.render_success(r)

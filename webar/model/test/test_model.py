@@ -10,4 +10,3 @@ class TestModel(BaseModel):
     """ 测试  """
 
     _collection_ = 'test1'
-    _database_ = 'test'
