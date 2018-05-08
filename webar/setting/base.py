@@ -26,7 +26,19 @@ else:
     DEBUG = False
 
 # mongodb 配置
-SQL_PORT = _db_conf.get('port', 27017)
+SQL_PORT = int(_db_conf.get('port', 27017))
 SQL_HOST = _db_conf.get('host', '127.0.0.1')
-SQL_USER = _db_conf.get('user')
-SQL_PASSWORD = _db_conf.get('pass')
+SQL_USER = _db_conf.get('user') if _db_conf.get('user') else None
+SQL_PASSWORD = _db_conf.get('pass') if _db_conf.get('pass') else None
+MONGO_CONF = {
+    'host': SQL_HOST,
+    'port': SQL_PORT,
+    'username': SQL_USER,
+    'password': SQL_PASSWORD,
+}
+
+
+
+# cache 配置
+CACHE_HOST = _cache_conf.get('host', '127.0.0.1')
+CACHE_PORT = int(_cache_conf.get('port', '6379'))
