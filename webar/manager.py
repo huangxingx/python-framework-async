@@ -12,16 +12,12 @@ import aioredis
 import motor
 import pika
 import tornado
-from apscheduler.jobstores.redis import RedisJobStore
-from apscheduler.schedulers.tornado import TornadoScheduler
 from motor import MotorClient
 from tornado import ioloop
 from tornado import web
 from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
-from tornado.concurrent import run_on_executor
-from concurrent.futures import ThreadPoolExecutor
 
 # 初始化环境
 file_path = os.path.realpath(__file__)
@@ -44,7 +40,6 @@ define("redis_client", default=None, help="mq connection", type=aioredis.command
 # start code
 
 class Application(web.Application):
-    executor = ThreadPoolExecutor()
 
     def __init__(self):
         handler_list = util.import_object('urls.urls')
