@@ -180,10 +180,15 @@ class Rabbitmq(AbstractLoader):
         self._connection.ioloop.start()
         LOGGER.info('Stopped')
 
-    def load(self, url=None):
+    def load(self, **kwargs):
         """load the example consumer by connecting to RabbitMQ and then
         starting the IOLoop to block and allow the SelectConnection to operate.
 
         """
-        self._url = url
+        host = kwargs.get('host')
+        port = kwargs.get('port')
+        username = kwargs.get('username')
+        password = kwargs.get('password')
+
+        self._url = f'amqp://{username}:{password}@{host}:{port}/%2F'
         self._connection = self.connect()

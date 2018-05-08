@@ -12,10 +12,12 @@ import redis
 from apscheduler.schedulers.tornado import TornadoScheduler
 from tornado import gen
 from tornado import web
+from tornado import options
 
 import setting
 
 from core.util import DatetimeJSONEncoder
+from handler.servicemixin import ServiceMixin
 from yxexceptions import YXException
 
 app_log = logging.getLogger("tornado.application")
@@ -140,7 +142,7 @@ def ensure_int_or_default(num, default=0, is_abs=False):
         return default
 
 
-class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
+class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin, ServiceMixin):
     """ 所有 Handler 的基类 """
     DEFAULT_PAGE_SIZE = 20
     DEFAULT_PAGE = 1
@@ -223,8 +225,7 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
                 return _check_arg_type(data)
             return data
 
-    @gen.coroutine
-    def get(self, *args, **kwargs):
+    async def get(self, *args, **kwargs):
         try:
             self.page = ensure_int_or_default(self.get_argument('page', BaseRequestHandler.DEFAULT_PAGE),
                                               default=BaseRequestHandler.DEFAULT_PAGE, is_abs=True)
@@ -232,7 +233,7 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
 
             self.page_size = ensure_int_or_default(self.get_argument('page_size', _setting_or_default_page_size),
                                                    default=_setting_or_default_page_size, is_abs=True)
-            yield self._get(*args, **kwargs)
+            await self._get(*args, **kwargs)
 
         except YXException as e:
             logging.warning(str(e.error_msg))
@@ -242,10 +243,9 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
             exception_callback(e)
             self.render_error(str(e))
 
-    @gen.coroutine
-    def post(self, *args, **kwargs):
+    async def post(self, *args, **kwargs):
         try:
-            yield self._post(*args, **kwargs)
+            await self._post(*args, **kwargs)
 
         except YXException as e:
             logging.warning(str(e.error_msg))
@@ -255,10 +255,9 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
             exception_callback(e)
             self.render_error(str(e))
 
-    @gen.coroutine
-    def delete(self, *args, **kwargs):
+    async def delete(self, *args, **kwargs):
         try:
-            yield self._delete(*args, **kwargs)
+            await self._delete(*args, **kwargs)
 
         except YXException as e:
             logging.warning(str(e.error_msg))
@@ -268,10 +267,9 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
             exception_callback(e)
             self.render_error(str(e))
 
-    @gen.coroutine
-    def put(self, *args, **kwargs):
+    async def put(self, *args, **kwargs):
         try:
-            yield self._put(*args, **kwargs)
+            await self._put(*args, **kwargs)
 
         except YXException as e:
             logging.warning(str(e.error_msg))
@@ -281,8 +279,7 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
             exception_callback(e)
             self.render_error(str(e))
 
-    @gen.coroutine
-    def options(self, *args, **kwargs):
+    async def options(self, *args, **kwargs):
         self.set_status(204)
         self.finish()
 
@@ -309,7 +306,7 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin):
     def cache(self) -> redis.Redis:
         """ 缓存对象 TornadoScheduler """
 
-        return self.application.cache
+        return options.options['redis_client']
 
     @property
     def scheduler(self) -> TornadoScheduler:

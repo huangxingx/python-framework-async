@@ -12,6 +12,8 @@ import decimal
 import json
 from abc import ABCMeta
 
+from bson import ObjectId
+
 
 class ObjectDict(dict):
     """Makes a dictionary behave like an object."""
@@ -45,10 +47,17 @@ class DatetimeJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime.datetime,)):
             return obj.strftime('%Y-%m-%d %H:%M:%S')
+
         elif isinstance(obj, (decimal.Decimal,)):
             return float(obj)
+
+        elif isinstance(obj, bytes):
+            return obj.decode('utf-8')
+
+        elif isinstance(obj, ObjectId):
+            return str(obj)
         else:
-            return super(self, DatetimeJSONEncoder).default(obj)
+            return super(DatetimeJSONEncoder, self).default(obj)
 
 
 class AbstractBase(object):

@@ -37,8 +37,19 @@ MONGO_CONF = {
     'password': SQL_PASSWORD,
 }
 
-
-
 # cache 配置
 CACHE_HOST = _cache_conf.get('host', '127.0.0.1')
 CACHE_PORT = int(_cache_conf.get('port', '6379'))
+
+# rabbitmq 中间件配置
+RABBITMQ_USER = _rabbitmq_conf.get('user', 'guest')
+RABBITMQ_PASS = _rabbitmq_conf.get('pass', 'guest')
+RABBITMQ_HOST = _rabbitmq_conf.get('host', '127.0.0.1')
+RABBITMQ_PORT = _rabbitmq_conf.get('port', '5672')
+
+RABBITMQ_CONF = {
+    'host': RABBITMQ_HOST,
+    'port': RABBITMQ_PORT,
+    'username': RABBITMQ_USER,
+    'password': RABBITMQ_PASS,
+}

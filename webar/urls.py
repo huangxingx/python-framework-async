@@ -9,6 +9,8 @@ from handler import api
 from handler import admin
 from handler import common
 
+from handler.test import *
+
 admin_url = [
     (r'/admin/echo', common.EchoHandler)
 ]
@@ -23,7 +25,8 @@ api_url = [
 ]
 
 test_url = [
-
+    ('/test/redis', RedisTestHandler),
+    ('/test/mongo', MongoTestHandler)
 ]
 
 urls = admin_url + web_url + api_url
