@@ -4,7 +4,7 @@
 # @author: x.huang
 # @date:08/05/18
 
-from handler.base import BaseRequestHandler
+from handler.base import BaseRequestHandler, ListResult
 
 
 class RedisTestHandler(BaseRequestHandler):
@@ -26,7 +26,8 @@ class MongoTestHandler(BaseRequestHandler):
         # r = await self.s_test.m_test.distinct('post', {'_id': '5af16be7d9d74d34e4906ab7'})
         # r = await self.s_test.m_test.find_one({'_id': '5af16be7d9d74d34e4906ab7'})
         r = await self.s_test.m_test.get_page_list(page=1, page_size=2)
-        self.render_success(r)
+        result = ListResult(data_list=r, count=len(r))
+        self.render_success(result)
 
     async def _post(self, *args, **kwargs):
 

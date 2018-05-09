@@ -3,19 +3,17 @@
 
 # @author: x.huang
 # @date:17-8-4
+import http
 import json
 import logging
 import traceback
-import http
 
 import redis
 from apscheduler.schedulers.tornado import TornadoScheduler
-from tornado import gen
-from tornado import web
 from tornado import options
+from tornado import web
 
 import setting
-
 from core.util import DatetimeJSONEncoder
 from handler.servicemixin import ServiceMixin
 from yxexceptions import YXException
@@ -38,6 +36,33 @@ class JsonParaTypeError(YXException):
         self.error_code = 400
 
 
+class ListResult(object):
+    """ 列表结果对象
+
+        :parameter
+            - `data_list` list : 列表数据
+            - `count` int： 列表条数
+    """
+
+    def __init__(self, data_list, count=None):
+        if data_list is None:
+            data_list = []
+        self.data_list = data_list
+        self.count = count
+
+    def as_dict(self):
+        if not self.count:
+            self.count = len(self.data_list)
+
+        return {
+            'count': self.count,
+            'data_list': self.data_list,
+        }
+
+    def __unicode__(self):
+        return self.as_dict()
+
+
 class RenderHandlerMixin(object):
     """ 必须和 tornado.web.RequestHandler 类一起使用.
 
@@ -54,7 +79,7 @@ class RenderHandlerMixin(object):
     def render_success(self, data=None, status_code=None, error_code=None, **kwargs):
         """ 正常返回.
 
-        :param dict|str|list data: 返回的数据对象
+        :param dict|str|list|ListResult data: 返回的数据对象
         :param int status_code: http code
         :param int error_code: business code 业务码，为 0 表示正常，非 0 为异常情况
         :param kwargs:
@@ -73,10 +98,16 @@ class RenderHandlerMixin(object):
         }
         if isinstance(data, dict):
             ret_data['data'] = data
+
         elif isinstance(data, list):
             ret_data['data']['data_list'] = data
+
         elif isinstance(data, (str, int)):
             ret_data['data']['data_value'] = data
+
+        elif isinstance(data, ListResult):
+            ret_data['data'] = data.as_dict()
+
         else:
             raise TypeError('render obj type error, obj: %s' % data)
 
