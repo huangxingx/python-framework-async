@@ -3,7 +3,7 @@
 #### 软件工具 ####
 * ubuntu 14.04
 * Python 3.6.4
-* Redis 2.8.9
+* Redis 4.0.9
 * Nginx 1.10.1
 * Rabbitmq 3.6.10
 

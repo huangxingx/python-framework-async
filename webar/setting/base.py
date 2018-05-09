@@ -9,7 +9,6 @@ from core import load_config
 env_ini = load_config.get_config_by_name('env')
 db_ini = load_config.get_config_by_name('db')
 
-_session_conf = db_ini['session']
 _db_conf = db_ini['db']
 _cache_conf = db_ini['cache']
 _common_conf = env_ini['common']
