@@ -4,12 +4,29 @@
 # @author: x.huang
 # @date:17-8-16
 import typing
+
+import bson
 import motor
 from motor.motor_tornado import MotorCursor
 from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
 from tornado import options
 
 IS_DELETE = 'is_delete'
+
+
+def translate_id_to_object_id(_id):
+    if isinstance(_id, str):
+        return bson.ObjectId(_id)
+    return _id
+
+
+def parse_spec_id_to_object_id(spec: typing.Union[dict, str]) -> typing.Union[dict, bson.ObjectId]:
+    if isinstance(spec, dict):
+        if '_id' in spec and isinstance(spec['_id'], str):
+            spec['_id'] = translate_id_to_object_id(spec['_id'])
+    elif isinstance(spec, str):
+        return translate_id_to_object_id(spec)
+    return spec
 
 
 class BaseModel(object):
@@ -38,12 +55,14 @@ class BaseModel(object):
         return self.db[self._database_][self._collection_]
 
     async def find_one(self, spec):
-        self._add_delete_flag(spec)
+        """ 返回一条数据 """
+        self._add_delete_flag(spec)  # 添加逻辑删除条件
+        spec = parse_spec_id_to_object_id(spec)
         r = await self._dao.find_one(spec)
         return r
 
     async def insert_one(self, document) -> typing.Optional[str]:
-        """
+        """ 插入一条数据
 
         :param document: 需要插入的数据
         :return: str or None
@@ -58,6 +77,7 @@ class BaseModel(object):
         return [str(_id) for _id in r.inserted_ids] if r else None
 
     async def find(self, spec, projection=None, sort=None, skip=0, limit=0) -> MotorCursor:
+        """ 返回 Cursor 对象 """
         return self._dao.find(spec, projection=projection, sort=sort, skip=skip, limit=limit)
 
     async def delete(self, spec_or_id, delete_many=True, is_logic_delete=True) -> int:
@@ -88,6 +108,8 @@ class BaseModel(object):
         :param multi: 是否操作多条记录
         :return:
         """
+        spec = parse_spec_id_to_object_id(spec)
+        self._add_delete_flag(spec)
         return await self._dao.update(spec, document, upsert=upsert, manipulate=manipulate,
                                       multi=multi)  # type: UpdateResult
 
@@ -100,13 +122,46 @@ class BaseModel(object):
         :param skip:
         :param limit: 查询时返回条数
         :param length: 返回列表长度
-        :return:
+        :return: list of this collection
         """
+        spec = parse_spec_id_to_object_id(spec)
+
         cursor = await self.find(spec, projection, sort=sort, skip=skip, limit=limit)
         return await cursor.to_list(length=length)
 
+    async def page(self, page, page_size):
+        pass
+
+    async def count(self, spec=None, is_contain_delete=False) -> int:
+        """ a number of this connection
+
+        :param dict|id spec: 查询条件
+        :param bool is_contain_delete: 是否包含逻辑删除
+        :return: int,
+        """
+        spec = parse_spec_id_to_object_id(spec)
+        if spec is None:
+            spec = {}
+        if not is_contain_delete:
+            spec[IS_DELETE] = {'$ne': 1}
+
+        return await self._dao.count(spec)
+
+    async def distinct(self, key, spec=None) -> list:
+        """ 获取去重之后的列表
+
+        :param str key: 返回的字段
+        :param dict spec: 过滤的条件
+        :return: list
+        """
+        spec = parse_spec_id_to_object_id(spec)
+
+        self._add_delete_flag(spec)
+        return await self._dao.distinct(key, spec)
+
     @staticmethod
-    def _add_delete_flag(spec: dict) -> dict:
-        if IS_DELETE not in spec:
-            spec[IS_DELETE] = 0
+    def _add_delete_flag(spec: typing.Optional[dict]) -> typing.Optional[dict]:
+        if spec and IS_DELETE not in spec:
+            spec[IS_DELETE] = {'$ne': 1}
+
         return spec
