@@ -57,6 +57,7 @@ def update_last_modify(document):
 
 class BaseModel(object):
     _collection_ = ''
+    _prefix_database_ = 'webar'
 
     def __init__(self):
         """ 调用初始化索引 """
@@ -68,7 +69,7 @@ class BaseModel(object):
 
     @property
     def _database_(self):
-        return self.__module__.split('.')[1]
+        return '%s_%s' % (self._prefix_database_, self.__module__.split('.')[1])
 
     @property
     def db(self):
