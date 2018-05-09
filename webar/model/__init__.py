@@ -12,6 +12,7 @@ from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, Upd
 from tornado import options
 
 IS_DELETE = 'is_delete'
+DEFAULT_PAGE_SIZE = 20
 
 
 def translate_id_to_object_id(_id):
@@ -113,7 +114,7 @@ class BaseModel(object):
         return await self._dao.update(spec, document, upsert=upsert, manipulate=manipulate,
                                       multi=multi)  # type: UpdateResult
 
-    async def get_list(self, spec, projection=None, sort=None, skip=0, limit=0, length=0):
+    async def get_list(self, spec=None, projection=None, sort=None, skip=0, limit=0, length=None):
         """ 获取列表
 
         :param dict spec: 过滤条件
@@ -124,13 +125,20 @@ class BaseModel(object):
         :param length: 返回列表长度
         :return: list of this collection
         """
+        if spec is None:
+            spec = {}
         spec = parse_spec_id_to_object_id(spec)
 
         cursor = await self.find(spec, projection, sort=sort, skip=skip, limit=limit)
         return await cursor.to_list(length=length)
 
-    async def page(self, page, page_size):
-        pass
+    async def get_page_list(self, spec=None, projection=None, sort=None, page=0, page_size=DEFAULT_PAGE_SIZE):
+        """ 获取分页列表 """
+
+        if spec is None:
+            spec = {}
+        skip = page * page_size
+        return await self.get_list(spec, projection=projection, sort=sort, skip=skip, length=page_size)
 
     async def count(self, spec=None, is_contain_delete=False) -> int:
         """ a number of this connection
