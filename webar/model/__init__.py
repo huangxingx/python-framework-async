@@ -3,6 +3,7 @@
 
 # @author: x.huang
 # @date:17-8-16
+import time
 import typing
 
 import bson
@@ -12,6 +13,8 @@ from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, Upd
 from tornado import options
 
 IS_DELETE = 'is_delete'
+CREATE_TIME = 'create_time'
+LAST_MODIFY = 'last_modify'
 DEFAULT_PAGE_SIZE = 20
 
 
@@ -28,6 +31,28 @@ def parse_spec_id_to_object_id(spec: typing.Union[dict, str]) -> typing.Union[di
     elif isinstance(spec, str):
         return translate_id_to_object_id(spec)
     return spec
+
+
+def add_create_info(document):
+    """ 添加创建基本信息 """
+    if CREATE_TIME not in document:
+        document[CREATE_TIME] = int(time.time())
+
+    if LAST_MODIFY not in document:
+        document[LAST_MODIFY] = int(time.time())
+
+    return document
+
+
+def update_last_modify(document):
+    """ 更新 last_modify """
+
+    update_date = document.get("$set", None)
+    if update_date:
+        update_date[LAST_MODIFY] = int(time.time())
+    else:
+        document[LAST_MODIFY] = int(time.time())
+    return document
 
 
 class BaseModel(object):
@@ -68,13 +93,16 @@ class BaseModel(object):
         :param document: 需要插入的数据
         :return: str or None
         """
+        add_create_info(document)
+
         r = await self._dao.insert_one(document)  # type: InsertOneResult
         return str(r.inserted_id) if r else None
 
     async def insert_many(self, document_list) -> typing.List[str]:
         """ 批量插入 """
+        new_document_list = map(add_create_info, document_list)
 
-        r = await self._dao.insert_many(document_list)  # type: InsertManyResult
+        r = await self._dao.insert_many(new_document_list)  # type: InsertManyResult
         return [str(_id) for _id in r.inserted_ids] if r else None
 
     async def find(self, spec, projection=None, sort=None, skip=0, limit=0) -> MotorCursor:
@@ -111,6 +139,9 @@ class BaseModel(object):
         """
         spec = parse_spec_id_to_object_id(spec)
         self._add_delete_flag(spec)
+
+        update_last_modify(document)
+
         return await self._dao.update(spec, document, upsert=upsert, manipulate=manipulate,
                                       multi=multi)  # type: UpdateResult
 

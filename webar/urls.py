@@ -4,9 +4,7 @@
 # @author: x.huang
 # @date:07/05/18
 import setting
-from handler import web
-from handler import api
-from handler import admin
+
 from handler import common
 
 from handler.test import *
