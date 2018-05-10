@@ -205,3 +205,19 @@ class BaseModel(object):
             spec[IS_DELETE] = {'$ne': 1}
 
         return spec
+
+
+class BaseUserModel(object):
+    async def check_password(self, username, password):
+        raise NotImplementedError()
+
+    def gen_password(self):
+        pass
+
+
+class UserNotExistError(Exception):
+    pass
+
+
+class PasswordError(Exception):
+    pass

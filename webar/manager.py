@@ -29,6 +29,7 @@ sys.path.append(project_dir)
 import setting
 from core import util
 from core import loader
+from core.auth.jwe import JwtHelper
 
 # define
 define("port", default=7777, help="Run server on a specific port", type=int)
@@ -46,6 +47,9 @@ class Application(web.Application):
         settings = dict(
             debug=setting.DEBUG,
         )
+
+        # jwt 对象
+        self.jwt_helper = JwtHelper()
 
         web.Application.__init__(self, handler_list, **settings)
 

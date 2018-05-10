@@ -6,7 +6,7 @@
 import setting
 
 from handler import common
-
+from handler import web
 from handler.test import *
 
 admin_url = [
@@ -14,7 +14,9 @@ admin_url = [
 ]
 
 web_url = [
-    (r'/web/echo', common.EchoHandler)
+    (r'/web/echo', common.EchoHandler),
+    (r'/web/user/login', web.WebLoginHandler),
+    (r'/web/user/logout', web.WebLoginHandler)
 ]
 
 api_url = [

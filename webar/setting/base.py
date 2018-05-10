@@ -52,3 +52,7 @@ RABBITMQ_CONF = {
     'username': RABBITMQ_USER,
     'password': RABBITMQ_PASS,
 }
+
+# 认证过期时间
+ACCESS_TOKEN_EXPIRE = 60 * 60 * 24 * 7
+REFRESH_TOKEN_EXPIRE = 60 * 60 * 24 * 30

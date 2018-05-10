@@ -26,6 +26,7 @@ class MongoTestHandler(BaseRequestHandler):
         # r = await self.s_test.m_test.distinct('post', {'_id': '5af16be7d9d74d34e4906ab7'})
         # r = await self.s_test.m_test.find_one({'_id': '5af16be7d9d74d34e4906ab7'})
         r = await self.s_test.m_test.get_page_list(page=1, page_size=2)
+        toekn, err = self.parse_token()
         result = ListResult(data_list=r, count=len(r))
         self.render_success(result)
 

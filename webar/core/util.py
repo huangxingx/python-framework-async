@@ -11,6 +11,7 @@ import datetime
 import decimal
 import json
 from abc import ABCMeta
+from functools import wraps
 
 from bson import ObjectId
 
@@ -81,3 +82,15 @@ class RedisLock(object):
             return True
         else:
             return False
+
+
+def singleton(cls):
+    instance = {}
+
+    @wraps(cls)
+    def _singleton(*args, **kw):
+        if cls not in instance:
+            instance[cls] = cls(*args, **kw)
+        return instance[cls]
+
+    return _singleton

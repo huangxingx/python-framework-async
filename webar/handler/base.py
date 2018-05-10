@@ -102,7 +102,7 @@ class RenderHandlerMixin(object):
         elif isinstance(data, list):
             ret_data['data']['data_list'] = data
 
-        elif isinstance(data, (str, int)):
+        elif isinstance(data, (str, int, bytes)):
             ret_data['data']['data_value'] = data
 
         elif isinstance(data, ListResult):
@@ -332,3 +332,12 @@ class BaseRequestHandler(web.RequestHandler, RenderHandlerMixin, ServiceMixin):
         """ 定时任务对象 TornadoScheduler """
 
         return self.application.scheduler
+
+    @property
+    def token(self):
+        auth_info = self.request.headers.get('Authorization')
+        return auth_info.strip('Bearer').strip(' ') if auth_info else None
+
+    def parse_token(self):
+
+        return self.application.jwt_helper.parse_token(self.token)
