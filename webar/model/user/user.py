@@ -18,6 +18,8 @@ class WebARUserModel(BaseModel, BaseUserModel):
     phone = 'phone'
     permission_id = 'permission_id'
 
+    last_modify_password_timestamp = 'last_modify_password_timestamp'
+
     async def check_password(self, username, input_password):
         query = {
             self.user_name: username,

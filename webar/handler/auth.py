@@ -10,6 +10,7 @@ from enum import Enum
 
 from handler.base import BaseRequestHandler
 from yxexceptions import LoginRequireException
+from yxexceptions.base import YXException
 
 __all__ = ['Authentication', 'LoginAuthTypeEnum', 'AuthBaseHandler']
 
@@ -18,10 +19,16 @@ class AuthBaseHandler(BaseRequestHandler):
     """ 登录验证的基类 """
 
     async def prepare(self):
-        self.current_user = await self.get_current_user()
+        try:
+            self.current_user = await self.get_current_user()
+        except YXException as e:
+            self.render_error(msg=e.error_msg, error_code=LoginRequireException.error_code)
+            return
+
         if not self.current_user and self.request.method.lower() != 'options':
             self.render_error(msg=LoginRequireException.error_msg, error_code=LoginRequireException.error_code)
             return
+
         super(AuthBaseHandler, self).prepare()
 
 

@@ -5,7 +5,7 @@
 # @date:10/05/18
 import json
 
-from core.auth.token import TokenManager
+from core.auth.token import TokenManager, PayLoad
 from yxexceptions import YXException
 from ..auth import AuthBaseHandler
 from ..base import BaseRequestHandler
@@ -22,15 +22,19 @@ class BaseWebHandler(BaseRequestHandler):
         if not payload:
             return None
 
-        user_id = payload.get('user_id')
-        user_key = f'user:{user_id}'
+        payload = PayLoad(**payload)
+        user_id = payload.user_id
 
-        user = await self.cache.get(user_key)
+        user = await self.s_user.get_user_by_id(user_id)
 
         if user is None:
             return None
 
-        user = json.loads(user)
+        # 比较 last_modify_password_timestamp
+        if user.get('last_modify_password_timestamp') and payload.last_modify_password_timestamp < user.get(
+                'last_modify_password_timestamp'):
+            return None
+
         return user
 
 

@@ -3,16 +3,17 @@
 
 # @author: x.huang
 # @date:10/05/18
+import time
 
 import setting
 import yxexceptions
-from core.auth.token import TokenManager
-from handler.web.base import WebHandler
+from core.auth.token import TokenManager, TokenResult, PayLoad
+from handler.web.base import WebHandler, WebAuthHandler
 from model import UserNotExistError, PasswordError
 from service.auth import LoginAuthTypeEnum
 
 
-class WebLoginHandler(WebHandler):
+class WebLoginHandler(WebAuthHandler):
 
     async def _post(self):
         """ webar 创建用户登录 认证 """
@@ -30,11 +31,18 @@ class WebLoginHandler(WebHandler):
 
         # 生成 token对象
         user_id = str(user.get('_id'))
+        last_modify_password_timestamp = user.get('last_modify_password_timestamp', int(time.time()))
+
+        pay_load = PayLoad(**{
+            'user_id': user_id,
+            'last_modify_password_timestamp': last_modify_password_timestamp
+        })
+
         token_result = TokenManager(self.application.jwt_helper).gen_token(setting.ACCESS_TOKEN_EXPIRE,
                                                                            setting.REFRESH_TOKEN_EXPIRE,
-                                                                           payload={'user_id': user_id})
+                                                                           payload=pay_load)  # type: TokenResult
         # 认证信息 写入 cache
-        await self.s_login.write_token_info_to_cache(token_result, user)
+        await self.s_login.set_user_info_to_cache(user, token_result.refresh_token_expire)
 
         self.render_success(token_result.as_dict())
 
@@ -48,5 +56,5 @@ class WebLoginHandler(WebHandler):
             self.render_success()
             return
         user_id = user.get('_id')
-        await self.s_login.logout(user_id, self.token)
+        await self.s_login.logout(user_id)
         self.render_success()

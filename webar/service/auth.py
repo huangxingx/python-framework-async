@@ -31,26 +31,16 @@ class LoginService(BaseService):
         user = await authentication.auth(username, password)
         return user
 
-    async def write_token_info_to_cache(self, token_result, user):
+    async def set_user_info_to_cache(self, user, expire):
+        """ 把用户对象写入 cache """
         user_id = str(user.get("_id"))
-        user_tokens_key = self.get_user_token_key(user_id)
         user_key = self.get_user_key(user_id)
-
-        pipe = self.cache.pipeline()
         user = json.dumps(user, cls=DatetimeJSONEncoder)
-        pipe.setex(user_key, token_result.access_token_expire, user)
+        await self.cache.setex(user_key, expire, user)
 
-        pipe.hset(user_tokens_key, token_result.access_token, token_result.refresh_token)
-        await pipe.execute()
-
-    async def logout(self, user_id, token):
-        user_tokens_key = self.get_user_token_key(user_id)
-
-        await self.cache.hdel(user_tokens_key, token)
-        num = await self.cache.hlen(user_tokens_key)
-        if not int(num):
-            user_key = self.get_user_key(user_id)
-            await self.cache.delete(user_key)
+    async def logout(self, user_id):
+        """ 推出登录操作 """
+        pass
 
 
 class LoginAuthTypeEnum(Enum):

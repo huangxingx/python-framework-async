@@ -11,7 +11,7 @@ import yxexceptions
 from core.util import singleton
 from .jwe import JwtHelper
 
-__all__ = ['TokenManager', 'TokenResult']
+__all__ = ['TokenManager', 'TokenResult', 'PayLoad']
 
 
 class TokenResult:
@@ -42,6 +42,26 @@ class TokenResult:
         }
 
 
+class PayLoad:
+    def __init__(self, user_id, last_modify_password_timestamp=None, is_admin=False, **kwargs):
+        """
+
+        :param id user_id: 用户ID
+        :param time.time() last_modify_password_timestamp: 最后一次修改密码的时间戳
+        :param bool is_admin: 是否是admin帐号
+        """
+        self.user_id = user_id
+        self.last_modify_password_timestamp = last_modify_password_timestamp
+        self.is_admin = is_admin
+
+    def as_dict(self):
+        return {
+            'user_id': self.user_id,
+            'last_modify_password_timestamp': self.last_modify_password_timestamp,
+            'is_admin': self.is_admin,
+        }
+
+
 class TokenManager(object):
 
     def __init__(self, jwt_help):
@@ -58,8 +78,15 @@ class TokenManager(object):
         return await validation.parse(token)
 
     def gen_token(self, access_token_expire, refresh_token_expire=None, payload=None) -> TokenResult:
-        access_token = self._gen_token(access_token_expire, payload=payload)
-        refresh_token = self._gen_token(refresh_token_expire, payload=payload)
+        """ 生成 token result
+
+        :param int access_token_expire:
+        :param int refresh_token_expire:
+        :param PayLoad payload: load info
+        :return: TokenResult
+        """
+        access_token = self._gen_token(access_token_expire, payload=payload.as_dict())
+        refresh_token = self._gen_token(refresh_token_expire, payload=payload.as_dict())
 
         return TokenResult(
             access_token=access_token,
