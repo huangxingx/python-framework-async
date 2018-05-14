@@ -128,14 +128,12 @@ class BaseModel(object):
             r = await self._dao.delete_one(spec_or_id)
         return r.deleted_count
 
-    async def update(self, spec, document, upsert=False, manipulate=False, multi=True) -> UpdateResult:
+    async def update(self, spec, document, upsert=False) -> UpdateResult:
         """ 更新操作
 
         :param spec: 过滤条件
         :param document: 更新的内容
         :param bool upsert: If True, perform an insert if no documents match the filter.
-        :param manipulate:
-        :param multi: 是否操作多条记录
         :return:
         """
         spec = parse_spec_id_to_object_id(spec)
@@ -143,8 +141,7 @@ class BaseModel(object):
 
         update_last_modify(document)
 
-        return await self._dao.update(spec, document, upsert=upsert, manipulate=manipulate,
-                                      multi=multi)  # type: UpdateResult
+        return await self._dao.update_many(spec, document, upsert=upsert)  # type: UpdateResult
 
     async def get_list(self, spec=None, projection=None, sort=None, skip=0, limit=0, length=None):
         """ 获取列表
