@@ -50,8 +50,7 @@ def update_last_modify(document):
     update_date = document.get("$set", None)
     if update_date:
         update_date[LAST_MODIFY] = int(time.time())
-    else:
-        document[LAST_MODIFY] = int(time.time())
+
     return document
 
 
